@@ -2,22 +2,41 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Import Data CBT</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 30px; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #333; }
+        .stats { display: flex; gap: 15px; margin-bottom: 20px; }
+        .stat-box { flex: 1; background: #eef2f7; padding: 15px; border-radius: 8px; text-align: center; border-left: 5px solid #007bff; }
+        .stat-box h4 { margin: 0; color: #555; }
+        .stat-box h2 { margin: 5px 0 0 0; color: #007bff; }
         .card { border: 2px dashed #007bff; padding: 20px; margin-top: 20px; border-radius: 8px; background: #f9fbfc;}
         button { background: #007bff; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; margin-top: 10px;}
         button:hover { background: #0056b3; }
         .alert { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #c3e6cb;}
         input[type="file"] { font-size: 16px; margin-top: 10px;}
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #007bff; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>🚀 Admin Panel - Import Data CBT</h2>
         
+        <div class="stats">
+            <div class="stat-box">
+                <h4>Total Siswa di DB</h4>
+                <h2>{{ total_siswa }}</h2>
+            </div>
+            <div class="stat-box">
+                <h4>Total Soal di DB</h4>
+                <h2>{{ total_soal }}</h2>
+            </div>
+        </div>
+
         {% if pesan %}
         <div class="alert">
             <strong>Info:</strong> {{ pesan }}
@@ -26,7 +45,7 @@
 
         <div class="card">
             <h3>1. Import Data Siswa (.xlsx)</h3>
-            <p style="color: #666; font-size:14px;">Gunakan template Excel dengan kolom: <b>NIS, Nama, Kelas, Password</b></p>
+            <p style="color: #666; font-size:14px;">Unggah file <b>DATA SISWA 9 DAN 8.xlsx</b></p>
             <form method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="tipe" value="siswa">
                 <input type="file" name="file" accept=".xlsx" required>
@@ -45,6 +64,32 @@
                 <button type="submit">Upload Word Soal</button>
             </form>
         </div>
+
+        {% if daftar_siswa %}
+        <div style="margin-top: 30px;">
+            <h3>📋 Sampel 20 Siswa Terdaftar di Database:</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>NIS / Username</th>
+                        <th>Nama Siswa</th>
+                        <th>Kelas</th>
+                        <th>Password Default</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in daftar_siswa %}
+                    <tr>
+                        <td><b>{{ s.nis }}</b></td>
+                        <td>{{ s.nama }}</td>
+                        <td>{{ s.kelas }}</td>
+                        <td><code>{{ s.password }}</code></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>
