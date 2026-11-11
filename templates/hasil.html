@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Hasil Ujian</title>
+    <style>
+        body { font-family: sans-serif; background: #eef2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h1 { color: #28a745; font-size: 48px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🎉 Ujian Selesai</h2>
+        <p>Terima kasih, <b>{{ nama }}</b>. Jawaban Anda telah tersimpan ke sistem.</p>
+        <hr>
+        <p>Nilai Akhir Anda:</p>
+        <h1>{{ skor }}</h1>
+        <small>Benar {{ nilai }} dari {{ total }} soal</small>
+        <br><br>
+        <a href="/" style="color:#007bff; text-decoration:none;">Kembali ke Halaman Depan</a>
+    </div>
+</body>
+</html>
