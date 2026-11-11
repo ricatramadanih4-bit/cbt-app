@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lembar Ujian CBT</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f8f9fa; padding: 20px; }
+        .header { background: #1F4E79; color: white; padding: 15px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .soal-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .options label { display: block; padding: 10px; margin: 5px 0; background: #f1f3f5; border-radius: 5px; cursor: pointer; }
+        .options input { margin-right: 10px; }
+        .btn-submit { background: #28a745; color: white; padding: 12px 25px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h3 style="margin:0;">LEMBAR UJIAN ONLINE</h3>
+                <small>Nama: <b>{{ nama }}</b> | Kelas: <b>{{ kelas }}</b></small>
+            </div>
+            <a href="/logout" style="color:#ffdddd; text-decoration:none;">Keluar</a>
+        </div>
+
+        <form action="/submit" method="POST">
+            {% for soal in daftar_soal %}
+            <div class="soal-card">
+                <p><b>{{ loop.index }}. {{ soal.pertanyaan }}</b></p>
+                <div class="options">
+                    <label><input type="radio" name="soal_{{ soal.id }}" value="A"> {{ soal.opsi_a }}</label>
+                    <label><input type="radio" name="soal_{{ soal.id }}" value="B"> {{ soal.opsi_b }}</label>
+                    <label><input type="radio" name="soal_{{ soal.id }}" value="C"> {{ soal.opsi_c }}</label>
+                    <label><input type="radio" name="soal_{{ soal.id }}" value="D"> {{ soal.opsi_d }}</label>
+                </div>
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn-submit" onclick="return confirm('Apakah Anda yakin ingin menyelesaikan ujian?')">Kirim Jawaban Ujian</button>
+        </form>
+    </div>
+</body>
+</html>
