@@ -1,7 +1,7 @@
-Flask==3.0.0
-Flask-SQLAlchemy==3.1.1
-pandas==2.1.1
-openpyxl==3.1.2
-python-docx==1.0.1
-psycopg2-binary==2.9.9
-gunicorn==21.2.0
+Flask
+Flask-SQLAlchemy
+pandas
+openpyxl
+python-docx
+psycopg2-binary
+gunicorn
