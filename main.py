@@ -20,18 +20,28 @@ def index():
 
 @app.route('/login', methods=['POST'])
 def login():
-    nis = request.form.get('nis', '').strip()
-    password = request.form.get('password', '').strip()
+    user_input = request.form.get('nis', '').strip()
+    pass_input = request.form.get('password', '').strip()
     
-    siswa = Siswa.query.filter_by(nis=nis, password=password).first()
-    if siswa:
-        session['siswa_id'] = siswa.id
-        session['nama'] = siswa.nama
-        session['kelas'] = siswa.kelas
-        return redirect(url_for('ujian'))
-    else:
-        flash('NIS atau Password salah!')
+    if not user_input:
+        flash('Silakan masukkan NIS atau Nama Siswa!')
         return redirect(url_for('index'))
+    
+    # Bisa login menggunakan NIS ATAU Nama Lengkap (bebas huruf besar/kecil)
+    siswa = Siswa.query.filter(
+        (db.func.lower(Siswa.nis) == user_input.lower()) | 
+        (db.func.lower(Siswa.nama) == user_input.lower())
+    ).first()
+    
+    if siswa:
+        if not pass_input or pass_input.lower() == siswa.password.lower() or pass_input.lower() == siswa.nis.lower() or pass_input.lower() == siswa.nama.lower():
+            session['siswa_id'] = siswa.id
+            session['nama'] = siswa.nama
+            session['kelas'] = siswa.kelas
+            return redirect(url_for('ujian'))
+            
+    flash('NIS / Nama atau Password tidak ditemukan dalam sistem!')
+    return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
@@ -78,7 +88,6 @@ def import_data():
                 try:
                     df = pd.read_excel(file, dtype=str)
                     
-                    # Deteksi header kolom secara otomatis (fleksibel)
                     col_map = {}
                     for col in df.columns:
                         c_upper = str(col).strip().upper()
@@ -107,14 +116,15 @@ def import_data():
                             password = str(row[pass_col]).split('.')[0].strip() if (pass_col and pd.notnull(row[pass_col])) else nis
                             
                             if nis and nama and nis.lower() != 'nan' and nama.lower() != 'nan':
-                                existing = Siswa.query.filter_by(nis=nis).first()
-                                if not existing:
-                                    siswa_baru = Siswa(nis=nis, nama=nama, kelas=kelas, password=password)
-                                    db.session.add(siswa_baru)
+                                siswa_baru = Siswa(nis=nis, nama=nama, kelas=kelas, password=password)
+                                db.session.add(siswa_baru)
+                                try:
+                                    db.session.commit()
                                     jumlah_berhasil += 1
+                                except Exception:
+                                    db.session.rollback()
                         
-                        db.session.commit()
-                        pesan = f"✅ Berhasil mengimpor {jumlah_berhasil} data siswa baru!"
+                        pesan = f"✅ Berhasil mengimpor {jumlah_berhasil} data siswa ke database!"
                 except Exception as e:
                     pesan = f"❌ Gagal import siswa: {e}"
 
@@ -135,16 +145,23 @@ def import_data():
                             
                             soal_baru = Soal(pertanyaan=pertanyaan, opsi_a=a, opsi_b=b, opsi_c=c, opsi_d=d, kunci=kunci)
                             db.session.add(soal_baru)
-                            soal_masuk += 1
+                            try:
+                                db.session.commit()
+                                soal_masuk += 1
+                            except Exception:
+                                db.session.rollback()
                             
-                    db.session.commit()
                     pesan = f"✅ Berhasil import {soal_masuk} Soal dari Word!"
                 except Exception as e:
                     pesan = f"❌ Gagal import soal: {str(e)}"
             else:
                 pesan = "❌ Format file tidak sesuai."
 
-    return render_template('import.html', pesan=pesan)
+    total_siswa = Siswa.query.count()
+    total_soal = Soal.query.count()
+    daftar_siswa = Siswa.query.limit(20).all()
+
+    return render_template('import.html', pesan=pesan, total_siswa=total_siswa, total_soal=total_soal, daftar_siswa=daftar_siswa)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
