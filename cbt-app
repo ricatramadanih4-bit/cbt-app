@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Import Data CBT</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 30px; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        .card { border: 2px dashed #007bff; padding: 20px; margin-top: 20px; border-radius: 8px; background: #f9fbfc;}
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; margin-top: 10px;}
+        button:hover { background: #0056b3; }
+        .alert { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #c3e6cb;}
+        input[type="file"] { font-size: 16px; margin-top: 10px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🚀 Admin Panel - Import Data CBT</h2>
+        
+        {% if pesan %}
+        <div class="alert">
+            <strong>Info:</strong> {{ pesan }}
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h3>1. Import Data Siswa (.xlsx)</h3>
+            <p style="color: #666; font-size:14px;">Gunakan template Excel dengan kolom: <b>NIS, Nama, Kelas, Password</b></p>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="tipe" value="siswa">
+                <input type="file" name="file" accept=".xlsx" required>
+                <br>
+                <button type="submit">Upload Excel Siswa</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>2. Import Bank Soal (.docx)</h3>
+            <p style="color: #666; font-size:14px;">Setiap 6 baris di Word otomatis dibaca sebagai: <br><i>Pertanyaan, Opsi A, Opsi B, Opsi C, Opsi D, Kunci</i></p>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="tipe" value="soal">
+                <input type="file" name="file" accept=".docx" required>
+                <br>
+                <button type="submit">Upload Word Soal</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
