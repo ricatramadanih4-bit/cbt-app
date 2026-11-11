@@ -76,20 +76,45 @@ def import_data():
         else:
             if tipe == 'siswa' and file.filename.endswith('.xlsx'):
                 try:
-                    df = pd.read_excel(file)
-                    for index, row in df.iterrows():
-                        nis = str(row.get('NIS', '')).strip()
-                        nama = str(row.get('Nama', '')).strip()
-                        kelas = str(row.get('Kelas', '')).strip()
-                        password = str(row.get('Password', nis)).strip()
+                    df = pd.read_excel(file, dtype=str)
+                    
+                    # Deteksi header kolom secara otomatis (fleksibel)
+                    col_map = {}
+                    for col in df.columns:
+                        c_upper = str(col).strip().upper()
+                        if 'NIS' in c_upper:
+                            col_map['nis'] = col
+                        elif 'NAMA' in c_upper:
+                            col_map['nama'] = col
+                        elif 'KELAS' in c_upper:
+                            col_map['kelas'] = col
+                        elif 'PASS' in c_upper:
+                            col_map['password'] = col
+
+                    nis_col = col_map.get('nis')
+                    nama_col = col_map.get('nama')
+                    kelas_col = col_map.get('kelas')
+                    pass_col = col_map.get('password')
+
+                    if not nis_col or not nama_col:
+                        pesan = "❌ Kolom NIS atau Nama tidak ditemukan di file Excel!"
+                    else:
+                        jumlah_berhasil = 0
+                        for _, row in df.iterrows():
+                            nis = str(row[nis_col]).split('.')[0].strip() if pd.notnull(row[nis_col]) else ''
+                            nama = str(row[nama_col]).strip() if pd.notnull(row[nama_col]) else ''
+                            kelas = str(row[kelas_col]).strip() if (kelas_col and pd.notnull(row[kelas_col])) else '-'
+                            password = str(row[pass_col]).split('.')[0].strip() if (pass_col and pd.notnull(row[pass_col])) else nis
+                            
+                            if nis and nama and nis.lower() != 'nan' and nama.lower() != 'nan':
+                                existing = Siswa.query.filter_by(nis=nis).first()
+                                if not existing:
+                                    siswa_baru = Siswa(nis=nis, nama=nama, kelas=kelas, password=password)
+                                    db.session.add(siswa_baru)
+                                    jumlah_berhasil += 1
                         
-                        if nis and nama:
-                            existing = Siswa.query.filter_by(nis=nis).first()
-                            if not existing:
-                                siswa_baru = Siswa(nis=nis, nama=nama, kelas=kelas, password=password)
-                                db.session.add(siswa_baru)
-                    db.session.commit()
-                    pesan = f"✅ Berhasil import {len(df)} data Siswa dari Excel!"
+                        db.session.commit()
+                        pesan = f"✅ Berhasil mengimpor {jumlah_berhasil} data siswa baru!"
                 except Exception as e:
                     pesan = f"❌ Gagal import siswa: {e}"
 
