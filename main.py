@@ -1,13 +1,12 @@
 import os
 import pandas as pd
 from docx import Document
-from flask import Flask, request, render_template
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from database import db, init_db, Siswa, Soal
 
 app = Flask(__name__)
 app.secret_key = "cbt_super_secret_key"
 
-# Inisialisasi Database
 init_db(app)
 
 with app.app_context():
@@ -15,7 +14,55 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    return "Sistem CBT Siap. Buka /import untuk memasukkan data siswa dan soal."
+    if 'siswa_id' in session:
+        return redirect(url_for('ujian'))
+    return render_template('login.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    nis = request.form.get('nis', '').strip()
+    password = request.form.get('password', '').strip()
+    
+    siswa = Siswa.query.filter_by(nis=nis, password=password).first()
+    if siswa:
+        session['siswa_id'] = siswa.id
+        session['nama'] = siswa.nama
+        session['kelas'] = siswa.kelas
+        return redirect(url_for('ujian'))
+    else:
+        flash('NIS atau Password salah!')
+        return redirect(url_for('index'))
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
+@app.route('/ujian')
+def ujian():
+    if 'siswa_id' not in session:
+        return redirect(url_for('index'))
+    soal_list = Soal.query.all()
+    return render_template('ujian.html', nama=session['nama'], kelas=session['kelas'], daftar_soal=soal_list)
+
+@app.route('/submit', methods=['POST'])
+def submit():
+    if 'siswa_id' not in session:
+        return redirect(url_for('index'))
+    
+    soal_list = Soal.query.all()
+    nilai = 0
+    total = len(soal_list)
+    
+    for soal in soal_list:
+        jawaban_siswa = request.form.get(f'soal_{soal.id}')
+        if jawaban_siswa and jawaban_siswa.strip().upper() == soal.kunci.strip().upper():
+            nilai += 1
+            
+    skor = round((nilai / total) * 100, 2) if total > 0 else 0
+    nama = session['nama']
+    session.clear()
+    return render_template('hasil.html', nama=nama, nilai=nilai, total=total, skor=skor)
 
 @app.route('/import', methods=['GET', 'POST'])
 def import_data():
@@ -52,7 +99,6 @@ def import_data():
                     soal_text = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
                     
                     soal_masuk = 0
-                    # Asumsi format: 1 baris soal, lalu 4 baris opsi, 1 baris kunci (Total 6 baris per soal)
                     for i in range(0, len(soal_text), 6):
                         if i + 5 < len(soal_text):
                             pertanyaan = soal_text[i]
@@ -69,13 +115,12 @@ def import_data():
                     db.session.commit()
                     pesan = f"✅ Berhasil import {soal_masuk} Soal dari Word!"
                 except Exception as e:
-                    pesan = f"❌ Gagal import soal. Pastikan format template Word benar. Error: {str(e)}"
+                    pesan = f"❌ Gagal import soal: {str(e)}"
             else:
-                pesan = "❌ Format file tidak sesuai. Gunakan .xlsx untuk siswa dan .docx untuk soal."
+                pesan = "❌ Format file tidak sesuai."
 
     return render_template('import.html', pesan=pesan)
 
 if __name__ == '__main__':
-    # Gunakan port dari environment variable (Wajib untuk Railway)
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
